@@ -4,10 +4,13 @@ import operator
 import collections
 
 import rethinkdb as r
-import rapidjson
+from pymongo import MongoClient
 
 import bigchaindb
 from bigchaindb import config_utils, crypto, exceptions, util
+
+# TODO: Ability to chose between rethinkdb and mongodb
+import bigchaindb.db.queries_mongodb as queries
 
 
 class Bigchain(object):
@@ -66,7 +69,8 @@ class Bigchain(object):
         return self._conn
 
     def reconnect(self):
-        return r.connect(host=self.host, port=self.port, db=self.dbname)
+        # TODO: Make it so we can return a connection for both mongo or rethink
+        return MongoClient(host=self.host, port=self.port)[self.dbname]
 
     def create_transaction(self, *args, **kwargs):
         """Create a new transaction
@@ -129,7 +133,7 @@ class Bigchain(object):
         signed_transaction.update({'assignee': assignee})
 
         # write to the backlog
-        response = r.table('backlog').insert(signed_transaction, durability=durability).run(self.conn)
+        response = queries.write_backlog(self.conn, signed_transaction, durability)
         return response
 
     def get_transaction(self, txid):
@@ -489,8 +493,7 @@ class Bigchain(object):
             block (dict): block to write to bigchain.
         """
 
-        block_serialized = rapidjson.dumps(block)
-        r.table('bigchain').insert(r.json(block_serialized), durability=durability).run(self.conn)
+        queries.write_block(self.conn, block, durability)
 
     # TODO: Decide if we need this method
     def transaction_exists(self, transaction_id):
@@ -522,7 +525,7 @@ class Bigchain(object):
         # 2. create the block with one transaction
         # 3. write the block to the bigchain
 
-        blocks_count = r.table('bigchain', read_mode=self.read_mode).count().run(self.conn)
+        blocks_count = queries.get_blocks_count(self.conn)
 
         if blocks_count:
             raise exceptions.GenesisBlockAlreadyExistsError('Cannot create the Genesis block')

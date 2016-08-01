@@ -105,6 +105,7 @@ setup(
         'requests==2.9',
         'gunicorn~=19.0',
         'multipipes~=0.1.0',
+        'pymongo==3.3.0',
     ],
     setup_requires=['pytest-runner'],
     tests_require=tests_require,

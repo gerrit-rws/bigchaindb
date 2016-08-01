@@ -1,2 +1,3 @@
 # TODO can we use explicit imports?
-from bigchaindb.db.utils import *
+# TODO: Ability to chose between mongodb and rethinkdb
+from bigchaindb.db.utils_mongodb import *
