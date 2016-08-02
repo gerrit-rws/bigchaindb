@@ -24,7 +24,7 @@ from bigchaindb.exceptions import (StartupError,
                                    DatabaseAlreadyExists,
                                    KeypairNotFoundException)
 from bigchaindb.commands import utils
-from bigchaindb.processes import Processes
+from bigchaindb.processes_mongodb import Processes
 from bigchaindb import crypto
 
 

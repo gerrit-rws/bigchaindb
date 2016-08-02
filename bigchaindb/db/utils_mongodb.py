@@ -31,7 +31,7 @@ def create_table(conn, dbname, table_name):
     # In mongodb a table is called a collection
     logger.info('Create `%s` table.', table_name)
     # create the table
-    conn[dbname].create_collection(table_name)
+    conn[dbname].create_collection(table_name, capped=True, size=100000)
 
 
 def create_bigchain_secondary_index(conn, dbname):

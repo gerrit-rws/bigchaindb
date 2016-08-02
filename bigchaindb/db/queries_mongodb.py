@@ -1,3 +1,7 @@
+# TODO:
+# mongodb primary key is `_id` while with rethinkdb its `id`
+# we need to set document['_id'] = document['id'] before writing to the database, maybe?
+# this would prevent duplicated documents
 
 
 def get_blocks_count(conn):
