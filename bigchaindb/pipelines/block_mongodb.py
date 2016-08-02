@@ -52,9 +52,8 @@ class Block:
         Returns:
             The transaction.
         """
-        # TODO: Cannot remove from a capped collection
-        # result = self.bigchain.conn.backlog.delete_one({'_id': tx['_id']})
-        # print('delete', result)
+        result = self.bigchain.conn.backlog.delete_one({'_id': tx['_id']})
+        print('delete', result)
         # mongodb primary key is _id which is of the type ObjectId and not json serializable
         tx.pop('_id')
         return tx

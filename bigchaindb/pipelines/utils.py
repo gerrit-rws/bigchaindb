@@ -95,17 +95,32 @@ class ChangeFeedMongoDB(Node):
         self.table = table
         self.operation = operation
         self.bigchain = Bigchain()
+        # connection to mongodb
+        self.conn = pymongo.MongoClient(host=self.bigchain.host, port=self.bigchain.port)
+        # namespace
+        self.ns = '{}.{}'.format(self.bigchain.dbname, self.table)
 
     def run_forever(self):
         for element in self.prefeed:
             self.outqueue.put(element)
 
-        cursor = self.bigchain.conn[self.table].find(cursor_type=pymongo.CursorType.TAILABLE_AWAIT)
+        cursor = self.conn.local.oplog.rs.find({'ns': self.ns}, cursor_type=pymongo.CursorType.TAILABLE_AWAIT)
         while cursor.alive:
             try:
                 record = cursor.next()
             except StopIteration:
                 print('mongodb cursor waiting')
             else:
+                is_insert = record['op'] == 'i'
+                is_delete = record['op'] == 'd'
+                is_update = record['op'] == 'u'
+
+                if is_insert and self.operation == ChangeFeed.INSERT:
+                    self.outqueue.put(record['o'])
+                elif is_delete and self.operation == ChangeFeed.DELETE:
+                    # on delete it only returns the id of the document
+                    self.outqueue.put(record['o'])
+                elif is_update and self.operation == ChangeFeed.UPDATE:
+                    # not sure what to do here. Lets return the entire operation
+                    self.outqueue.put(record)
                 print(record)
-                self.outqueue.put(record)
